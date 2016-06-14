@@ -40,24 +40,24 @@ let add list (surname, name, age, email, phone) = match surname with
                | f when f > 120 -> raise Add_Contact_With_Invalid_Data
                | _ -> list@[{surname = capitalize(String.trim(surname)); name = String.trim(String.uppercase(name)); age = age; email = check_email email true; phone = check_phone phone true}]
 
-let rec getId_rec list fieldtype argument index result = match index with
+let rec getId_rec list field_type argument index result = match index with
      | index_ when index_ >= List.length(list) -> result
-     | _ -> match fieldtype with
+     | _ -> match field_type with
           | All when argument = string_of_int(index)
-               || argument = (List.nth list index).name
-               || argument = (List.nth list index).surname
+               || argument = String.lowercase((List.nth list index).name)
+               || argument = String.lowercase((List.nth list index).surname)
                || argument = string_of_int((List.nth list index).age)
-               || argument = (List.nth list index).email
-               || argument = (List.nth list index).phone -> getId_rec list fieldtype argument (index + 1) index
-          | Id when argument = string_of_int(index) -> getId_rec list fieldtype argument (index + 1) index
-          | Name when argument = (List.nth list index).name -> getId_rec list fieldtype argument (index + 1) index
-          | Surname when argument = (List.nth list index).surname -> getId_rec list fieldtype argument (index + 1) index
-          | Age when argument = string_of_int((List.nth list index).age) -> getId_rec list fieldtype argument (index + 1) index
-          | Email when argument = (List.nth list index).email -> getId_rec list fieldtype argument (index + 1) index
-          | Phone when argument = (List.nth list index).phone -> getId_rec list fieldtype argument (index + 1) index
-          | _ -> getId_rec list fieldtype argument (index + 1) result
+               || argument = String.lowercase((List.nth list index).email)
+               || argument = (List.nth list index).phone -> getId_rec list field_type argument (index + 1) index
+          | Id when argument = string_of_int(index) -> getId_rec list field_type argument (index + 1) index
+          | Name when argument = String.lowercase((List.nth list index).name) -> getId_rec list field_type argument (index + 1) index
+          | Surname when argument = String.lowercase((List.nth list index).surname) -> getId_rec list field_type argument (index + 1) index
+          | Age when argument = string_of_int((List.nth list index).age) -> getId_rec list field_type argument (index + 1) index
+          | Email when argument = String.lowercase((List.nth list index).email) -> getId_rec list field_type argument (index + 1) index
+          | Phone when argument = (List.nth list index).phone -> getId_rec list field_type argument (index + 1) index
+          | _ -> getId_rec list field_type argument (index + 1) result
 
-let getId list fieldtype argument = getId_rec list fieldtype (String.lowercase argument) 0 (-1)
+let getId list field_type argument = getId_rec list field_type (String.lowercase argument) 0 (-1)
 
 let remove list index =
      if List.length list = 0 then
@@ -81,18 +81,32 @@ let replace list index (surname, name, age, email, phone) =
                | head :: tail -> replace_rec (current + 1) ( if index != current then (head :: _list) else {surname = capitalize(String.trim(surname)); name = String.trim(String.uppercase(name)); age = age; email = check_email email false; phone = check_phone phone false} :: _list ) tail
           in replace_rec 0 [] list
 
-let rec print_rec list fieldtype argument index = match index with
+let rec print_spaces count =
+     if count <= 0 then () else begin print_string " " ; print_spaces (count - 1) end
+
+let my_print_string message length =
+     if String.length message > length then print_string (String.sub message 0 length) else begin print_string message ; print_spaces (length - (String.length message)) end
+
+let rec print_rec list field_type argument index = match index with
      | index_ when index_ >= List.length(list) -> ()
      | _ ->
-     let print_contact list fieldtype argument contact index =
-        Printf.printf "%-4d %-16s %-16s %-4d %-32s %-14s\n" index contact.surname contact.name contact.age contact.email contact.phone
-        ; print_rec list fieldtype argument (index + 1) in match fieldtype with
-          | Id when argument = string_of_int(index) -> print_contact list fieldtype argument (List.nth list index) index
-          | Name when argument = (List.nth list index).name -> print_contact list fieldtype argument (List.nth list index) index
-          | Surname when argument = (List.nth list index).surname -> print_contact list fieldtype argument (List.nth list index) index
-          | Age when argument = string_of_int((List.nth list index).age) -> print_contact list fieldtype argument (List.nth list index) index
-          | Email when argument = (List.nth list index).email -> print_contact list fieldtype argument (List.nth list index) index
-          | Phone when argument = (List.nth list index).phone -> print_contact list fieldtype argument (List.nth list index) index
-          | _ -> print_rec list fieldtype argument (index + 1)
+     let print_contact list field_type argument contact index =
+        my_print_string (string_of_int(index)) 4 ;
+        my_print_string contact.surname 16 ;
+        my_print_string contact.name 16 ;
+        my_print_string (string_of_int(contact.age)) 4 ;
+        my_print_string contact.email 32 ;
+        my_print_string contact.phone 14 ;
+        print_string "\n"
+        ; print_rec list field_type argument (index + 1) in match field_type with
+          | Id when argument = string_of_int(index) -> print_contact list field_type argument (List.nth list index) index
+          | Name when argument = String.lowercase((List.nth list index).name) -> print_contact list field_type argument (List.nth list index) index
+          | Surname when argument = String.lowercase((List.nth list index).surname) -> print_contact list field_type argument (List.nth list index) index
+          | Age when argument = string_of_int((List.nth list index).age) -> print_contact list field_type argument (List.nth list index) index
+          | Email when argument = String.lowercase((List.nth list index).email) -> print_contact list field_type argument (List.nth list index) index
+          | Phone when argument = (List.nth list index).phone -> print_contact list field_type argument (List.nth list index) index
+          | _ -> print_rec list field_type argument (index + 1)
 
-let print list fieldtype argument = print_rec list fieldtype argument 0
+let print list field_type argument = print_rec list field_type (String.lowercase argument) 0
+
+(*        Printf.printf "%-4d %-16s %-16s %-4d %-32s %-14s\n" index contact.surname contact.name contact.age contact.email contact.phone *)
